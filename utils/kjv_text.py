@@ -74,7 +74,7 @@ class KJVTextDataset(object):
         plt.show()
 
     def _compute_char_bigrams(self):
-        print("Recomputing character bigrams...", flush=True)
+        print("Recomputing character bigrams...")
         start_t = time.time()
 
         all_char_bigrams = ngrams(list(self.full_text), 2)
@@ -93,7 +93,7 @@ class KJVTextDataset(object):
         self.char_bigrams /= float(total_bigrams)
 
         end_t = time.time()
-        print("Done recomputing character bigrams (%.3f seconds)." % (end_t - start_t), flush=True)
+        print("Done recomputing character bigrams (%.3f seconds)." % (end_t - start_t))
 
     def one_hot(self):
         # Get one-hot ground truth vectors for each char in the text as a matrix
