@@ -17,6 +17,7 @@ class KJVTextDataset(object):
         # Determine counts of unique chars in text, plus a mapping of char->int (for bigram matrix)
         self.char_counts = dict()
         self.char_to_int = dict()
+        self.int_to_char = []
         for char in self.full_text:
             if char in self.char_counts:
                 self.char_counts[char] += 1
@@ -24,10 +25,13 @@ class KJVTextDataset(object):
                 self.char_counts[char] = 1
 
             if char not in self.char_to_int:
-                self.char_to_int[char] = len(self.char_to_int) 
+                char_int = len(self.char_to_int)
+                self.char_to_int[char] = char_int
+                self.int_to_char.append(char)
 
-        # Don't compute bigrams in initialization -- do on-demand
+        # Don't compute bigrams or one-hot in initialization -- do on-demand
         self.char_bigrams = None    # |unique chars| x |unique chars|
+        self.one_hot_matrix = None
 
     def unique_chars(self):
         return len(self.char_counts)
@@ -90,3 +94,12 @@ class KJVTextDataset(object):
 
         end_t = time.time()
         print("Done recomputing character bigrams (%.3f seconds)." % (end_t - start_t), flush=True)
+
+    def one_hot(self):
+        # Get one-hot ground truth vectors for each char in the text as a matrix
+        if self.one_hot_matrix is None:
+            self.one_hot_matrix = np.zeros((len(self.full_text), self.unique_chars()), dtype=float)
+            for i in range(len(self.full_text)):
+                one_hot_idx = self.char_to_int[self.full_text[i]]
+                self.one_hot_matrix[i, one_hot_idx] = 1.0
+        return self.one_hot_matrix

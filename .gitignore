@@ -9,3 +9,5 @@ saved_models/*
 *.bbl
 *.blg
 *.zip
+
+**/__pycache__
