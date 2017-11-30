@@ -3,21 +3,22 @@ sys.path.append("./")
 
 import numpy as np
 
-from utils.belief_prop import BeliefPropRunner
+from utils.belief_prop import run_belief_prop
 from utils.kjv_text import KJVTextDataset
 from utils.metrics import char_err_rate, word_err_rate
 
 print("Running with clean one-hot vectors...")
 
 kjv = KJVTextDataset()
-bp = BeliefPropRunner()
 
 # Simply use ground truth one-hot vectors as predictions
 # Just a baseline model -- not much accomplished here in general
 predictions = kjv.one_hot()
 
 # Run belief propagation with the bigram model
-bp_predictions = bp.run(kjv.char_bigram_matrix(), predictions)
+# Note: prediction is label vector, not one-hot matrix
+bp_predictions = run_belief_prop(kjv.char_bigram_matrix(), predictions)
+
 
 # Compute character error rate and word error rate
 print("Computing character error rate (CER)...")

@@ -2,19 +2,15 @@ from nltk import word_tokenize
 import numpy as np
 
 def char_err_rate(bp_predictions, kjv_text):
-    # Convert belief prop predictions to char predictions
-    bp_onehot = np.argmax(bp_predictions, axis=1)
-    truth_onehot = np.argmax(kjv_text.one_hot(), axis=1)
-    
-    correct_chars = np.sum(bp_onehot == truth_onehot)
+    truth_labels = np.argmax(kjv_text.one_hot(), axis=1)
+    correct_chars = np.sum(bp_predictions == truth_labels)
     total_chars = len(kjv_text.full_text)
     
     return (1.0 - (correct_chars / float(total_chars)))
 
 def word_err_rate(bp_predictions, kjv_text):
     # Convert belief prop predictions to sentence
-    bp_onehot = np.argmax(bp_predictions, axis=1)
-    bp_sentence = "".join([kjv_text.int_to_char[x] for x in bp_onehot])
+    bp_sentence = "".join([kjv_text.int_to_char[int(x)] for x in bp_predictions])
     correct_tokens = 0
 
     # Compute WER as percentage of correct tokens as aligned by ground truth word tokens
