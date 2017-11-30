@@ -10,14 +10,14 @@ class KJVTextDataset(object):
     def __init__(self):
         super(KJVTextDataset, self).__init__()
 
-        # Ignore newlines
-        self.full_text = gutenberg.raw('bible-kjv.txt').replace('\n', '')
+        # Ignore newlines (replace with a space)
+        self.full_text = gutenberg.raw('bible-kjv.txt').replace('\n', ' ')
         self.words = gutenberg.words('bible-kjv.txt')
 
         # Determine counts of unique chars in text, plus a mapping of char->int (for bigram matrix)
+        self.int_to_char = sorted(set(list(self.full_text)))
         self.char_counts = dict()
         self.char_to_int = dict()
-        self.int_to_char = []
         for char in self.full_text:
             if char in self.char_counts:
                 self.char_counts[char] += 1
@@ -25,9 +25,8 @@ class KJVTextDataset(object):
                 self.char_counts[char] = 1
 
             if char not in self.char_to_int:
-                char_int = len(self.char_to_int)
+                char_int = self.int_to_char.index(char)
                 self.char_to_int[char] = char_int
-                self.int_to_char.append(char)
 
         # Don't compute bigrams or one-hot in initialization -- do on-demand
         self.char_bigrams = None    # |unique chars| x |unique chars|
@@ -63,14 +62,13 @@ class KJVTextDataset(object):
             self._compute_char_bigrams()
         
         # Visualize the char bigram matrix as a heatmap
-        # Use log probabilities due to large spread from low to high
-        ax = sns.heatmap(np.log(self.char_bigrams),
+        ax = sns.heatmap(self.char_bigrams,
                          cmap="jet",
                          xticklabels=sorted(self.char_to_int.keys()),
                          yticklabels=sorted(self.char_to_int.keys()))
-        ax.set_title("Char bigram log-probabilities")
-        plt.xlabel("Character 1")
-        plt.ylabel("Character 2")
+        ax.set_title("Char bigram probabilities")
+        plt.xlabel("Character 2")
+        plt.ylabel("Character 1")
         plt.show()
 
     def _compute_char_bigrams(self):
@@ -80,16 +78,18 @@ class KJVTextDataset(object):
         all_char_bigrams = ngrams(list(self.full_text), 2)
 
         # First compute raw counts
-        # Uses eps instead of zero so log prob viz works
-        self.char_bigrams = np.ones((self.unique_chars(), self.unique_chars())) * np.finfo(float).eps
+        self.char_bigrams = np.ones((self.unique_chars(), self.unique_chars())) * np.finfo(float).eps 
         total_bigrams = 0
         for char_bigram in all_char_bigrams:
             char_1, char_2 = char_bigram[0:2]
+
+            # Bigrams <char 1, char 2> are normalized by char 1's probability
+            char_1_prob = self.char_count(char_1) / float(len(self.full_text))
             self.char_bigrams[self.char_to_int[char_1],
-                              self.char_to_int[char_2]] += 1
+                              self.char_to_int[char_2]] += 1.0 / char_1_prob
             total_bigrams += 1
 
-        # Now, normalize into probabilities
+        # Normalize all probabilities by number of bigrams
         self.char_bigrams /= float(total_bigrams)
 
         end_t = time.time()

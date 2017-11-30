@@ -3,7 +3,7 @@ import time
 
 import numpy as np
 
-def run_belief_prop(char_bigram_matrix, predictions):
+def run_belief_prop(char_bigram_matrix, predictions, backoff_alpha=1.0):
     print("Running belief propagation")
     start_t = time.time()
 
@@ -24,23 +24,21 @@ def run_belief_prop(char_bigram_matrix, predictions):
     current_dec_msg = num_nodes - 3
     print_interval = int((num_nodes - 2) / 100)
     for i in range(num_nodes - 2):
-        '''
         if i % print_interval == 0:
             # Print update in place
             sys.stdout.write("\rBelief propagation %d%% complete" % int((i / float(num_nodes - 2) * 100.0)))
             sys.stdout.flush()
-        '''
 
         # Compute message in increasing direction, normalizing in process
         inc_msgs[current_inc_msg, :] = np.matmul(char_bigram_matrix,
-                                                 np.multiply(inc_msgs[current_inc_msg - 1, :],
+                                                 np.multiply(backoff_alpha * inc_msgs[current_inc_msg - 1, :],
                                                              predictions[current_inc_msg, :]))
         inc_msgs[current_inc_msg, :] /= float(sum(inc_msgs[current_inc_msg, :]))
         current_inc_msg += 1
 
         # Compute message in decreasing direction, normalizing in process
         dec_msgs[current_dec_msg, :] = np.matmul(np.transpose(char_bigram_matrix),
-                                                 np.multiply(dec_msgs[current_dec_msg + 1, :],
+                                                 np.multiply(backoff_alpha * dec_msgs[current_dec_msg + 1, :],
                                                              predictions[current_dec_msg + 1, :]))
         dec_msgs[current_dec_msg, :] /= float(sum(dec_msgs[current_dec_msg, :]))
         current_dec_msg -= 1

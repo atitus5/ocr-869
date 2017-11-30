@@ -1,3 +1,4 @@
+import math
 import sys
 sys.path.append("./")
 
@@ -17,7 +18,13 @@ predictions = kjv.one_hot()
 
 # Run belief propagation with the bigram model
 # Note: prediction is label vector, not one-hot matrix
-bp_predictions = run_belief_prop(kjv.char_bigram_matrix(), predictions)
+# bp_predictions = run_belief_prop(kjv.char_bigram_matrix(), predictions)
+
+# Add in backoff to keep probabilities relatively localized (think exponential moving avg)
+char_dist_1pct = 1
+backoff_alpha = math.pow(0.01, (1.0 / float(char_dist_1pct)))
+print("Using backoff alpha %.6f (1%% contrib at %d char distance)" % (backoff_alpha, char_dist_1pct))
+bp_predictions = run_belief_prop(kjv.char_bigram_matrix(), predictions, backoff_alpha=backoff_alpha)
 
 
 # Compute character error rate and word error rate
