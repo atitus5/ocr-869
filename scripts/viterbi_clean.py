@@ -4,7 +4,7 @@ sys.path.append("./")
 
 import numpy as np
 
-from utils.viterbi import run_viterbi
+from utils.viterbi import viterbi_error_correction
 from utils.kjv_text import KJVTextDataset
 from utils.metrics import char_err_rate, word_err_rate
 
@@ -18,7 +18,7 @@ predictions = kjv.one_hot()
 
 # Run Viterbi algorithm with the bigram model
 # Note: prediction is label vector, not one-hot matrix
-viterbi_predictions = run_viterbi(kjv.char_bigram_matrix(), predictions)
+viterbi_predictions = viterbi_error_correction(kjv, predictions)
 
 # Compute character error rate and word error rate
 print("Computing character error rate (CER)...")

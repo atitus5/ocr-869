@@ -1,12 +1,67 @@
+import math
 import sys
 import time
 
+from nltk import word_tokenize
 import numpy as np
 
-def run_belief_prop(char_bigram_matrix, predictions, backoff_alpha=1.0):
-    print("Running belief propagation")
+def bp_error_correction(kjv, all_predictions):
     start_t = time.time()
 
+    # Run belief propagation to correct any words not found in dictionary
+    print("Setting up word set and tokenizing predictions...")
+    word_set = set(word_tokenize(kjv.full_text))    
+    predicted_char_ints = np.argmax(all_predictions, axis=1)
+    predicted_chars = list(map(lambda x: kjv.int_to_char[x], predicted_char_ints))
+    predicted_sentence = "".join(predicted_chars)
+    predicted_tokens = word_tokenize(predicted_sentence)
+    print("Done setting up.")
+    
+    # Add in backoff to keep probabilities relatively localized (think exponential moving avg)
+    char_dist_1pct = 5  # Arbitrary; can be changed
+    backoff_alpha = math.pow(0.01, (1.0 / float(char_dist_1pct)))
+    print("Using backoff alpha %.6f (1%% contrib at %d char distance)" % (backoff_alpha, char_dist_1pct))
+
+    # Correct only words that don't fall into our word set
+    print("Correcting character errors with belief propagation...")
+    corrected_predictions = predicted_char_ints
+    token_idx = 0
+    char_idx = 0
+    print_interval = int(len(predicted_tokens) / 100)
+    for token_idx in range(len(predicted_tokens)):
+        if token_idx % print_interval == 0:
+            # Print update in place
+            sys.stdout.write("\rError correction %d%% complete" % int(token_idx / float(len(predicted_tokens) * 100.0)))
+            sys.stdout.flush()
+
+        token = predicted_tokens[token_idx]
+
+        if token not in word_set:
+            # Attempt to fix the error
+            start = char_idx
+            end = char_idx + len(token)
+            new_char_predictions = run_belief_prop(kjv.char_bigram_matrix(),
+                                                   all_predictions[start:end, :],
+                                                   backoff_alpha=backoff_alpha)
+            corrected_predictions[start:end] = new_char_predictions
+
+        # Only worry about start character index of next token if not at end
+        char_idx += len(token)
+        if token_idx < len(predicted_tokens) - 1:
+            next_token = predicted_tokens[token_idx + 1] 
+            while predicted_sentence[char_idx] != next_token[0]:
+                char_idx += 1
+
+    # Insert newline to reset in-place update timer
+    sys.stdout.write("\rError correction 100% complete!\n")
+    sys.stdout.flush()
+    
+    end_t = time.time()
+    print("Corrected errors with belief prop in %.3f seconds" % (end_t - start_t)) 
+    return corrected_predictions
+    
+
+def run_belief_prop(char_bigram_matrix, predictions, backoff_alpha=1.0):
     # Message_{i,j,k} is message from node i to node j (with dimension k = # unique chars)
     num_nodes, num_chars = predictions.shape[0:2]
     inc_msgs = np.zeros((num_nodes - 1, num_chars))     # Index i is message from i to (i + 1)
@@ -22,13 +77,7 @@ def run_belief_prop(char_bigram_matrix, predictions, backoff_alpha=1.0):
     # Compute all remaining messages. Operates bidirectionally.
     current_inc_msg = 1
     current_dec_msg = num_nodes - 3
-    print_interval = int((num_nodes - 2) / 100)
     for i in range(num_nodes - 2):
-        if i % print_interval == 0:
-            # Print update in place
-            sys.stdout.write("\rBelief propagation %d%% complete" % int((i / float(num_nodes - 2) * 100.0)))
-            sys.stdout.flush()
-
         # Compute message in increasing direction, normalizing in process
         inc_msgs[current_inc_msg, :] = np.matmul(char_bigram_matrix,
                                                  np.multiply(backoff_alpha * inc_msgs[current_inc_msg - 1, :],
@@ -42,10 +91,6 @@ def run_belief_prop(char_bigram_matrix, predictions, backoff_alpha=1.0):
                                                              predictions[current_dec_msg + 1, :]))
         dec_msgs[current_dec_msg, :] /= float(sum(dec_msgs[current_dec_msg, :]))
         current_dec_msg -= 1
-    
-    # Insert newline to reset in-place update timer
-    sys.stdout.write("\rBelief propagation 100% complete!\n")
-    sys.stdout.flush()
     
     # Compute final marginal probabilities by multiplying incoming messages together
     # Uses labels instead of one-hot due to memory constraints
@@ -61,6 +106,4 @@ def run_belief_prop(char_bigram_matrix, predictions, backoff_alpha=1.0):
     # Last node; edge case
     final_predictions[num_nodes - 1] = np.argmax(inc_msgs[num_nodes - 2, :])
 
-    end_t = time.time()
-    print("Ran belief prop in %.3f seconds" % (end_t - start_t)) 
     return final_predictions
