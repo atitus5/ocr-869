@@ -24,6 +24,7 @@ def bp_error_correction(kjv, all_predictions):
 
     # Correct only words that don't fall into our word set
     print("Correcting character errors with belief propagation...")
+    char_bigram_matrix = kjv.char_bigram_matrix()
     corrected_predictions = predicted_char_ints
     token_idx = 0
     char_idx = 0
@@ -36,11 +37,11 @@ def bp_error_correction(kjv, all_predictions):
 
         token = predicted_tokens[token_idx]
 
-        if token not in word_set:
+        if len(token) > 1 and token not in word_set:
             # Attempt to fix the error
             start = char_idx
             end = char_idx + len(token)
-            new_char_predictions = run_belief_prop(kjv.char_bigram_matrix(),
+            new_char_predictions = run_belief_prop(char_bigram_matrix,
                                                    all_predictions[start:end, :],
                                                    backoff_alpha=backoff_alpha)
             corrected_predictions[start:end] = new_char_predictions
