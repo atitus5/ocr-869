@@ -12,3 +12,5 @@ nltk; uses 'gutenberg' corpus (install with nltk.download())
 numpy
 seaborn
 pillow
+sklearn
+skimage

@@ -8,7 +8,6 @@ from PIL import Image, ImageFont, ImageDraw
 from utils.kjv_text import KJVTextDataset
 
 kjv = KJVTextDataset()
-text_str = kjv.full_text
 
 # Derived from code at
 # https://nicholastsmith.wordpress.com/2017/10/14/deep-learning-ocr-using-tensorflow-and-python/
@@ -30,32 +29,8 @@ image_dims_px = (char_height * chars_per_line, (font_size_pt + 3) * lines_per_im
 
 print("Image dimensions: (%d px x %d px)" % (image_dims_px[0], image_dims_px[1]))
 
-num_lines = int(math.ceil(len(text_str) / float(chars_per_line)))
-num_imgs = int(math.floor(num_lines / float(lines_per_img)))    # Use floor to cut out the last partial image
-text_str_per_line = [text_str[i * chars_per_line:(i + 1) * chars_per_line] + "\n" for i in range(num_lines)]
-text_str_per_image = ["".join(text_str_per_line[i * lines_per_img:(i + 1) * lines_per_img]) for i in range(num_imgs)]
+text_str_per_image = kjv.image_text((chars_per_line, lines_per_img))
 
-print("Creating label file (text)...")
-with open("images/labels.txt", 'w') as labels:
-    for txt in text_str_per_image:
-        # Remove newlines in label
-        txt_label = txt.replace("\n", "")
-        labels.write(txt_label + "\n")
-print("Done creating label file (text).")
-
-print("Creating label file (Numpy integer labels)...")
-label_mat = np.zeros((num_imgs, chars_per_line * lines_per_img), dtype=int)
-for i in range(num_imgs):
-    # Remove newlines in label
-    txt = text_str_per_image[i]
-    txt_label = txt.replace("\n", "")
-    label_integers = [kjv.char_to_int[x] for x in txt_label]
-    label_mat[i, :] = label_integers
-np.save("images/labels.npy", label_mat)
-print("Done creating label file (Numpy integer labels).")
-
-
-'''
 print("Creating %d images..." % num_imgs)
 for i in range(num_imgs):
     # Print update in place
@@ -68,4 +43,3 @@ for i in range(num_imgs):
 # Insert newline to reset in-place update timer
 sys.stdout.write("\r\nImage creation complete!\n")
 sys.stdout.flush()
-'''
