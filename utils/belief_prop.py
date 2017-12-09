@@ -11,7 +11,10 @@ def bp_error_correction(kjv, all_predictions):
     # Run belief propagation to correct any words not found in dictionary
     print("Setting up word set and tokenizing predictions...")
     word_set = set(word_tokenize(kjv.full_text))    
-    predicted_char_ints = np.argmax(all_predictions, axis=1)
+    if len(all_predictions.shape) > 1:
+        predicted_char_ints = np.argmax(all_predictions, axis=1)
+    else:
+        predicted_char_ints = all_predictions
     predicted_chars = list(map(lambda x: kjv.int_to_char[x], predicted_char_ints))
     predicted_sentence = "".join(predicted_chars)
     predicted_tokens = word_tokenize(predicted_sentence)

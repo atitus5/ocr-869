@@ -19,6 +19,9 @@ class OCRCNN(OCRModel):
         super(OCRCNN, self).__init__(image_dir=image_dir, debug=debug)
 
         assert(len(kernel_sizes) == len(unit_counts) == len(strides) == len(maxpool_sizes))
+        
+        # Fix random seed for debugging
+        torch.manual_seed(1)
 
         # Build CNN
         self.layers = OrderedDict()
@@ -72,9 +75,6 @@ class OCRCNN(OCRModel):
         max_epochs = 250
         learning_rate = 0.0001
         optimizer = optim.Adam(self.classifier.parameters(), lr=learning_rate)
-
-        # Fix random seed for debugging
-        torch.manual_seed(1)
 
         # Regularize via patience-based early stopping
         best_val_loss = float('inf')
@@ -179,8 +179,34 @@ class OCRCNN(OCRModel):
         eval_feats = torch.FloatTensor(eval_feats)
         eval_labels = torch.LongTensor(list(map(int, eval_labels)))
 
-        print("Evaluating data points with classifier...")
-        # TODO
+        print("Evaluating data points with convnet...")
+
+        # Use one-hot to save some memory
+        predictions = np.empty(len(eval_labels), dtype=int)
+
+        batch_size = 128
+        self.classifier.eval()
+
+        num_batches = int(math.ceil(eval_feats.shape[0] / float(batch_size)))
+        print_interval = max(1, int(num_batches / 100.0))
+        for batch_idx in range(num_batches):
+            feats = eval_feats[batch_idx * batch_size:(batch_idx + 1) * batch_size, :]
+            feats = feats.view(batch_size, 1, self.char_image_size[0], self.char_image_size[1])
+            feats = Variable(feats, volatile=True)      # Set to volatile so history isn't saved
+
+            batch_probs = self.forward_classifier(feats)
+            batch_preds = np.argmax(batch_probs.cpu().data.numpy(), axis=1).reshape((-1))
+            predictions[batch_idx * batch_size:(batch_idx + 1) * batch_size] = batch_preds
+
+            if batch_idx % print_interval == 0:
+                # Print update in place
+                sys.stdout.write("\rTrain %d%% complete" % int(batch_idx / float(eval_feats.shape[0] / float(batch_size) / 100.0)))
+                sys.stdout.flush()
+
+        # Write new line to clear line
+        sys.stdout.write("\rEval 100% complete!\n")
+        sys.stdout.flush()
+
         print("Evaluated data points with classifier.")
 
         return predictions
