@@ -4,7 +4,7 @@ sys.path.append("./")
 
 import numpy as np
 
-from models.svm import OCRSVM
+from models.cnn import OCRCNN
 
 from utils.belief_prop import bp_error_correction
 from utils.viterbi import viterbi_error_correction
@@ -13,17 +13,25 @@ from utils.metrics import char_err_rate, word_err_rate
 
 kjv = KJVTextDataset()
 
-# Predict characters with an SVM
-# model = OCRSVM()
-model = OCRSVM(debug=True)
+# Predict characters with convolutional neural net
+kernel_sizes = [3]
+unit_counts = [64]
+strides = [1]
+maxpool_sizes = [2]
+print("Using kernels %s" % str(kernel_sizes))
+print("Using unit counts %s" % str(unit_counts))
+print("Using strides %s" % str(strides))
+print("Using max-pool sizes %s" % str(maxpool_sizes))
+# model = OCRCNN(kernel_sizes=kernel_sizes, unit_counts=unit_counts, strides=strides, maxpool_sizes=maxpool_sizes)
+model = OCRCNN(kernel_sizes=kernel_sizes, unit_counts=unit_counts, strides=strides, maxpool_sizes=maxpool_sizes, debug=True)
 
-print("Training SVM...")
+print("Training CNN...")
 model.train()
-print("Done training SVM.")
+print("Done training CNN.")
 
-print("Predicting character labels using SVM...")
+print("Predicting character labels using CNN...")
 predictions = model.eval()
-print("Done predicting character labels using SVM.")
+print("Done predicting character labels using CNN.")
 
 print(predictions.shape)
 print(kjv.one_hot().shape)
@@ -38,7 +46,7 @@ print("Computing word error rate (WER)...")
 wer = word_err_rate(np.argmax(predictions, axis=1), kjv)
 print("Word error rate (WER): %.3f%%" % (wer * 100.0))
 
-print("Running belief prop ...")
+print("Running belief prop with clean one-hot vectors...")
 
 # Run belief propagation with the bigram model
 # Note: prediction is label vector, not one-hot matrix
@@ -56,7 +64,7 @@ print("Word error rate (WER): %.3f%%" % (wer * 100.0))
 
 print("Completed BP run!")
 
-print("Running Viterbi algorithm ...")
+print("Running Viterbi algorithm with clean one-hot vectors...")
 
 # Compute character error rate and word error rate before error correction
 print("PRE-ERROR CORRECTION")

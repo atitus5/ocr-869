@@ -14,3 +14,4 @@ seaborn
 pillow
 sklearn
 skimage
+pytorch

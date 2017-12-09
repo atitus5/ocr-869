@@ -28,7 +28,7 @@ def bp_error_correction(kjv, all_predictions):
     corrected_predictions = predicted_char_ints
     token_idx = 0
     char_idx = 0
-    print_interval = int(len(predicted_tokens) / 100)
+    print_interval = max(int(len(predicted_tokens) / 100), 1)
     for token_idx in range(len(predicted_tokens)):
         if token_idx % print_interval == 0:
             # Print update in place

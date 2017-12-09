@@ -14,7 +14,8 @@ from utils.metrics import char_err_rate, word_err_rate
 kjv = KJVTextDataset()
 
 # Predict characters with a k-Nearest Neighbors model
-model = OCRKNN()
+# model = OCRKNN()
+model = OCRKNN(debug=True)
 
 print("Training KNN...")
 model.train()
@@ -37,7 +38,7 @@ print("Computing word error rate (WER)...")
 wer = word_err_rate(np.argmax(predictions, axis=1), kjv)
 print("Word error rate (WER): %.3f%%" % (wer * 100.0))
 
-print("Running belief prop with clean one-hot vectors...")
+print("Running belief prop ...")
 
 # Run belief propagation with the bigram model
 # Note: prediction is label vector, not one-hot matrix
@@ -55,7 +56,7 @@ print("Word error rate (WER): %.3f%%" % (wer * 100.0))
 
 print("Completed BP run!")
 
-print("Running Viterbi algorithm with clean one-hot vectors...")
+print("Running Viterbi algorithm ...")
 
 # Compute character error rate and word error rate before error correction
 print("PRE-ERROR CORRECTION")
