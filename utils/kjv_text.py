@@ -106,25 +106,38 @@ class KJVTextDataset(object):
                 self.one_hot_matrix[i, one_hot_idx] = 1.0
         return self.one_hot_matrix
 
-    # Define our split as 80% train, 20% evaluation, evenly spread though dataset
-    # [T T V T T, "", ..., ""]
+    # Define our split as 80% train, 10% validation, 10% evaluation, evenly spread though dataset
+    # [T T V T T T T E T T, "", ..., ""]
+
+    # Genesis subset: first 200 images
     def dataset_indices(self, dataset, chars_per_line, lines_per_img):
         if dataset == "train":
             return self.train_indices(chars_per_line, lines_per_img)
+        elif dataset == "val":
+            return self.val_indices(chars_per_line, lines_per_img)
         elif dataset == "eval":
             return self.eval_indices(chars_per_line, lines_per_img)
         else:
-            print("dataset_indices(dataset): dataset must be one of \"train\" or \"eval\"")
+            print("dataset_indices(dataset): dataset must be one of \"train\", \"val\" or \"eval\"")
             sys.exit(1)
 
     def train_indices(self, chars_per_line, lines_per_img):
+        '''
         full_range = list(range(len(self.image_text(chars_per_line, lines_per_img))))
         index_set = set(full_range) - set(self.eval_indices(chars_per_line, lines_per_img))
+        '''
+        index_set = set(list(range(200))) - set(self.val_indices(chars_per_line, lines_per_img)) - set(self.eval_indices(chars_per_line, lines_per_img))
         return sorted(index_set)
+    
+    def val_indices(self, chars_per_line, lines_per_img):
+        full_range = list(range(len(self.image_text(chars_per_line, lines_per_img))))
+        # return full_range[2:10:] 
+        return full_range[2:10:200] 
 
     def eval_indices(self, chars_per_line, lines_per_img):
         full_range = list(range(len(self.image_text(chars_per_line, lines_per_img))))
-        return full_range[2:5:] 
+        # return full_range[7:10:] 
+        return full_range[7:10:200] 
 
     def image_text(self, chars_per_line, lines_per_img):
         num_lines = int(math.ceil(len(self.full_text) / float(chars_per_line)))

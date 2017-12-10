@@ -14,10 +14,10 @@ from utils.metrics import char_err_rate, word_err_rate
 kjv = KJVTextDataset()
 
 # Predict characters with convolutional neural net
-kernel_sizes = [3]
-unit_counts = [64]
-strides = [1]
-maxpool_sizes = [2]
+kernel_sizes = [5, 3]
+unit_counts = [128, 64]
+strides = [1, 1]
+maxpool_sizes = [0, 0]
 print("Using kernels %s" % str(kernel_sizes))
 print("Using unit counts %s" % str(unit_counts))
 print("Using strides %s" % str(strides))

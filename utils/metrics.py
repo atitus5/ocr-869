@@ -1,14 +1,14 @@
 from nltk import word_tokenize
 import numpy as np
 
-def char_err_rate(bp_predictions, kjv_text):
-    truth_labels = np.argmax(kjv_text.one_hot(), axis=1)
+def char_err_rate(bp_predictions, truth_one_hot:
+    truth_labels = np.argmax(truth_one_hot, axis=1)
     correct_chars = np.sum(bp_predictions == truth_labels)
     total_chars = len(kjv_text.full_text)
     
     return (1.0 - (correct_chars / float(total_chars)))
 
-def word_err_rate(bp_predictions, kjv_text):
+def word_err_rate(bp_predictions, truth_one_hot):
     # Convert belief prop predictions to sentence
     bp_sentence = "".join([kjv_text.int_to_char[int(x)] for x in bp_predictions])
     correct_tokens = 0
