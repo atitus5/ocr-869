@@ -1,3 +1,5 @@
+import math
+import sys
 import time
 
 import matplotlib.pyplot as plt
@@ -103,3 +105,43 @@ class KJVTextDataset(object):
                 one_hot_idx = self.char_to_int[self.full_text[i]]
                 self.one_hot_matrix[i, one_hot_idx] = 1.0
         return self.one_hot_matrix
+
+    # Define our split as 80% train, 20% evaluation, evenly spread though dataset
+    # [T T V T T, "", ..., ""]
+    def dataset_indices(self, dataset, chars_per_line, lines_per_img):
+        if dataset == "train":
+            return self.train_indices(chars_per_line, lines_per_img)
+        elif dataset == "eval":
+            return self.eval_indices(chars_per_line, lines_per_img)
+        else:
+            print("dataset_indices(dataset): dataset must be one of \"train\" or \"eval\"")
+            sys.exit(1)
+
+    def train_indices(self, chars_per_line, lines_per_img):
+        full_range = list(range(len(self.image_text(chars_per_line, lines_per_img))))
+        index_set = set(full_range) - set(self.eval_indices(chars_per_line, lines_per_img))
+        return sorted(index_set)
+
+    def eval_indices(self, chars_per_line, lines_per_img):
+        full_range = list(range(len(self.image_text(chars_per_line, lines_per_img))))
+        return full_range[2:5:] 
+
+    def image_text(self, chars_per_line, lines_per_img):
+        num_lines = int(math.ceil(len(self.full_text) / float(chars_per_line)))
+        num_imgs = int(math.floor(num_lines / float(lines_per_img)))    # Use floor to cut out the last partial image
+        text_str_per_line = [self.full_text[i * chars_per_line:(i + 1) * chars_per_line] + "\n" for i in range(num_lines)]
+        text_str_per_image = ["".join(text_str_per_line[i * lines_per_img:(i + 1) * lines_per_img]) for i in range(num_imgs)]
+        return text_str_per_image
+
+    def image_label_mat(self, chars_per_line, lines_per_img):
+        num_lines = int(math.ceil(len(self.full_text) / float(chars_per_line)))
+        num_imgs = int(math.floor(num_lines / float(lines_per_img)))    # Use floor to cut out the last partial image
+        label_mat = np.zeros((num_imgs, chars_per_line * lines_per_img), dtype=int)
+        text_str_per_image = self.image_text(chars_per_line, lines_per_img)
+        for i in range(num_imgs):
+            # Remove newlines in label
+            txt = text_str_per_image[i]
+            txt_label = txt.replace("\n", "")
+            label_integers = [self.char_to_int[x] for x in txt_label]
+            label_mat[i, :] = label_integers
+        return label_mat
