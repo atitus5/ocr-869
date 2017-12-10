@@ -1,7 +1,7 @@
 from nltk import word_tokenize
 import numpy as np
 
-def char_err_rate(bp_predictions, truth_one_hot:
+def char_err_rate(bp_predictions, truth_one_hot):
     truth_labels = np.argmax(truth_one_hot, axis=1)
     correct_chars = np.sum(bp_predictions == truth_labels)
     total_chars = len(kjv_text.full_text)
