@@ -18,7 +18,7 @@ class OCRModel(object):
         # See scripts/generate_images.py
         self.font_size_in = 0.25
         self.font_size_pt = int(self.font_size_in * 72.0)
-        self.font_path = "/Library/Fonts/Andale Mono.ttf"    # Specific to Mac OS -- change if needed
+        self.font_path = "utils/Andale-Mono.ttf"    # Specific to Mac OS -- change if needed
         self.font = ImageFont.truetype(self.font_path, self.font_size_pt)
         self.char_height, self.char_width = self.font.getsize("A")[0:2]
         self.chars_per_line = 32
