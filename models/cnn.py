@@ -71,9 +71,9 @@ class OCRCNN(OCRModel):
         val_labels = torch.LongTensor(list(map(int, val_labels)))
 
         print("Training convnet...")
-        batch_size = 128
-        max_epochs = 250
-        learning_rate = 0.0001
+        batch_size = 256
+        max_epochs = 25
+        learning_rate = 0.00001
         optimizer = optim.Adam(self.classifier.parameters(), lr=learning_rate)
 
         # Regularize via patience-based early stopping

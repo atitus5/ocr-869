@@ -22,8 +22,8 @@ print("Using kernels %s" % str(kernel_sizes))
 print("Using unit counts %s" % str(unit_counts))
 print("Using strides %s" % str(strides))
 print("Using max-pool sizes %s" % str(maxpool_sizes))
-# model = OCRCNN(kernel_sizes=kernel_sizes, unit_counts=unit_counts, strides=strides, maxpool_sizes=maxpool_sizes)
-model = OCRCNN(kernel_sizes=kernel_sizes, unit_counts=unit_counts, strides=strides, maxpool_sizes=maxpool_sizes, debug=True)
+model = OCRCNN(kernel_sizes=kernel_sizes, unit_counts=unit_counts, strides=strides, maxpool_sizes=maxpool_sizes)
+# model = OCRCNN(kernel_sizes=kernel_sizes, unit_counts=unit_counts, strides=strides, maxpool_sizes=maxpool_sizes, debug=True)
 
 print("Training CNN...")
 model.train()
@@ -43,7 +43,7 @@ print("Computing word error rate (WER)...")
 wer = word_err_rate(predictions, kjv)
 print("Word error rate (WER): %.3f%%" % (wer * 100.0))
 
-print("Running belief prop with clean one-hot vectors...")
+print("Running belief prop...")
 
 # Run belief propagation with the bigram model
 # Note: prediction is label vector, not one-hot matrix
@@ -61,7 +61,7 @@ print("Word error rate (WER): %.3f%%" % (wer * 100.0))
 
 print("Completed BP run!")
 
-print("Running Viterbi algorithm with clean one-hot vectors...")
+print("Running Viterbi algorithm...")
 
 # Compute character error rate and word error rate before error correction
 print("PRE-ERROR CORRECTION")
