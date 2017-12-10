@@ -39,12 +39,14 @@ class OCRCNN(OCRModel):
             current_height = int(math.floor((current_height - kernel_size) / float(stride))) + 1
             current_width = int(math.floor((current_width - kernel_size) / float(stride))) + 1
 
+            '''
             maxpool_size = maxpool_sizes[idx]
             self.layers["maxpool_%d" % idx] = nn.MaxPool2d(maxpool_size)
             # Formula from from http://pytorch.org/docs/master/nn.html#maxpool2d
             # Assumes padding, dilation = 0
             current_height = int(math.floor((current_height - maxpool_size) / float(maxpool_size))) + 1
             current_width = int(math.floor((current_width - maxpool_size) / float(maxpool_size))) + 1
+            '''
 
             self.layers["bn_%d" % idx] = nn.BatchNorm2d(current_channels)
             self.layers["relu_%d" % idx] = nn.ReLU()
