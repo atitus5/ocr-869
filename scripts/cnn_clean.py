@@ -30,8 +30,17 @@ model.train()
 print("Done training CNN.")
 
 print("Predicting character labels using CNN...")
-predictions = model.eval()
-print(predictions)
+preds = model.eval()
+predictions = np.zeros(preds.shape)
+for i in range(len(preds)):
+    extra = i%(32*32)
+    base = i-extra
+    row = extra//32
+    column = extra%32
+    base+= (row+column*32)
+    predictions[base] = preds[i]
+
+
 print("Done predicting character labels using CNN.")
 
 # Compute character error rate and word error rate before error correction

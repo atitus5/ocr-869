@@ -81,7 +81,7 @@ class OCRCNN(OCRModel):
 
         print("Training convnet...")
         batch_size = 256
-        max_epochs = 25
+        max_epochs = 5
         learning_rate = 0.01
         optimizer = optim.SGD(self.classifier.parameters(), lr=learning_rate)
 

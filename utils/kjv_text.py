@@ -101,7 +101,12 @@ class KJVTextDataset(object):
         # Get one-hot ground truth vectors for each char in the text as a matrix
         if self.one_hot_matrix is None:
             self.one_hot_matrix = np.zeros((len(self.full_text), self.unique_chars()), dtype=float)
-            for i in range(len(self.full_text)):
+            for i in range(len(self.full_text)-32*32):
+                #extra = i%(32*32)
+                #base = i-extra
+                #row = extra//32
+                #column = extra%32
+                #base+= (row+column*32)
                 one_hot_idx = self.char_to_int[self.full_text[i]]
                 self.one_hot_matrix[i, one_hot_idx] = 1.0
         return self.one_hot_matrix
