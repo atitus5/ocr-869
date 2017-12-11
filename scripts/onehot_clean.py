@@ -13,16 +13,16 @@ kjv = KJVTextDataset()
 
 # Simply use ground truth one-hot vectors as predictions
 # Just a baseline model -- not much accomplished here in general
-predictions = kjv.one_hot_eval()
+predictions = kjv.one_hot()
 
 # Compute character error rate and word error rate before error correction
 print("PRE-ERROR CORRECTION")
 print("Computing character error rate (CER)...")
-cer = char_err_rate(np.argmax(predictions, axis=1), kjv.one_hot_eval())
+cer = char_err_rate(np.argmax(predictions, axis=1), kjv)
 print("Character error rate (CER): %.3f%%" % (cer * 100.0))
 
 print("Computing word error rate (WER)...")
-wer = word_err_rate(np.argmax(predictions, axis=1), kjv.one_hot_eval())
+wer = word_err_rate(np.argmax(predictions, axis=1), kjv)
 print("Word error rate (WER): %.3f%%" % (wer * 100.0))
 
 print("Running belief prop with clean one-hot vectors...")
@@ -34,11 +34,11 @@ bp_predictions = bp_error_correction(kjv, predictions)
 # Compute character error rate and word error rate after error correction
 print("POST-ERROR CORRECTION")
 print("Computing character error rate (CER)...")
-cer = char_err_rate(bp_predictions, kjv.one_hot_eval())
+cer = char_err_rate(bp_predictions, kjv)
 print("Character error rate (CER): %.3f%%" % (cer * 100.0))
 
 print("Computing word error rate (WER)...")
-wer = word_err_rate(bp_predictions, kjv.one_hot_eval())
+wer = word_err_rate(bp_predictions, kjv)
 print("Word error rate (WER): %.3f%%" % (wer * 100.0))
 
 print("Completed BP run!")
@@ -52,11 +52,11 @@ viterbi_predictions = viterbi_error_correction(kjv, predictions)
 # Compute character error rate and word error rate after error correction
 print("POST-ERROR CORRECTION")
 print("Computing character error rate (CER)...")
-cer = char_err_rate(viterbi_predictions, kjv.one_hot_eval())
+cer = char_err_rate(viterbi_predictions, kjv)
 print("Character error rate (CER): %.3f%%" % (cer * 100.0))
 
 print("Computing word error rate (WER)...")
-wer = word_err_rate(viterbi_predictions, kjv.one_hot_eval())
+wer = word_err_rate(viterbi_predictions, kjv)
 print("Word error rate (WER): %.3f%%" % (wer * 100.0))
 
 print("Completed Viterbi run!")

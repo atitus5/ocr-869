@@ -63,16 +63,6 @@ print("Completed BP run!")
 
 print("Running Viterbi algorithm...")
 
-# Compute character error rate and word error rate before error correction
-print("PRE-ERROR CORRECTION")
-print("Computing character error rate (CER)...")
-cer = char_err_rate(predictions, kjv)
-print("Character error rate (CER): %.3f%%" % (cer * 100.0))
-
-print("Computing word error rate (WER)...")
-wer = word_err_rate(predictions, kjv)
-print("Word error rate (WER): %.3f%%" % (wer * 100.0))
-
 # Run Viterbi algorithm with the bigram model
 # Note: prediction is label vector, not one-hot matrix
 viterbi_predictions = viterbi_error_correction(kjv, predictions)

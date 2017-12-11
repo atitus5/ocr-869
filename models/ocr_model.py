@@ -33,7 +33,6 @@ class OCRModel(object):
         # Dynamically load these later
         self._training_data = None
         self._val_data = None
-        self._eval_data = None
 
         self.debug = debug
 
@@ -47,7 +46,7 @@ class OCRModel(object):
 
             if self.debug:
                 # Quick prototyping
-                training_indices = list(range(16))
+                training_indices = list(range(9))
             else:
                 training_indices = self.kjv.dataset_indices("train", self.chars_per_line, self.lines_per_img)
 
@@ -84,7 +83,7 @@ class OCRModel(object):
 
             if self.debug:
                 # Quick prototyping
-                val_indices = list(range(16, 18))
+                val_indices = list(range(9, 10))
             else:
                 val_indices = self.kjv.dataset_indices("train", self.chars_per_line, self.lines_per_img)
 
@@ -110,40 +109,3 @@ class OCRModel(object):
             print("Prepared val data.")
 
         return self._val_data
-
-    def eval_data(self):
-        if self._eval_data is None:
-            print("Preparing eval data...")
-
-            # Samples are flattened individual character images
-            flattened_size = self.char_image_size[0] * self.char_image_size[1]
-            chars_per_image = self.chars_per_line * self.lines_per_img
-
-            if self.debug:
-                # Quick prototyping
-                eval_indices = list(range(18, 20))
-            else:
-                eval_indices = self.kjv.dataset_indices("train", self.chars_per_line, self.lines_per_img)
-
-            eval_feats = np.empty((len(eval_indices) * chars_per_image,
-                                       flattened_size), dtype=float)
-            eval_labels = np.empty((len(eval_indices) * chars_per_image), dtype=int)
-
-            for i in range(len(eval_indices)):
-                eval_idx = eval_indices[i]
-                img = io.imread(self.image_paths[eval_idx], as_grey=True)
-                for x in range(self.lines_per_img):
-                    for y in range(self.chars_per_line):
-                        feats = img[x * (self.font_size_pt + 3):(x + 1) * (self.font_size_pt + 3),
-                                    y * self.char_height:(y + 1) * self.char_height]
-                        feats_flattened = feats.reshape((-1))
-                        
-                        feat_idx = (i * chars_per_image) + (x * self.lines_per_img) + y 
-                        eval_feats[feat_idx, :] = feats_flattened
-                        eval_labels[feat_idx] = self.labels[eval_idx, (x * self.lines_per_img) + y]
-
-            self._eval_data = (eval_feats, eval_labels)
-            
-            print("Prepared eval data.")
-
-        return self._eval_data

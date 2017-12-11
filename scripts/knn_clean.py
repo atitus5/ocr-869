@@ -25,9 +25,6 @@ print("Predicting character labels using KNN...")
 predictions = model.eval()
 print("Done predicting character labels using KNN.")
 
-print(predictions.shape)
-print(kjv.one_hot().shape)
-
 # Compute character error rate and word error rate before error correction
 print("PRE-ERROR CORRECTION")
 print("Computing character error rate (CER)...")
@@ -57,16 +54,6 @@ print("Word error rate (WER): %.3f%%" % (wer * 100.0))
 print("Completed BP run!")
 
 print("Running Viterbi algorithm ...")
-
-# Compute character error rate and word error rate before error correction
-print("PRE-ERROR CORRECTION")
-print("Computing character error rate (CER)...")
-cer = char_err_rate(np.argmax(predictions, axis=1), kjv)
-print("Character error rate (CER): %.3f%%" % (cer * 100.0))
-
-print("Computing word error rate (WER)...")
-wer = word_err_rate(np.argmax(predictions, axis=1), kjv)
-print("Word error rate (WER): %.3f%%" % (wer * 100.0))
 
 # Run Viterbi algorithm with the bigram model
 # Note: prediction is label vector, not one-hot matrix

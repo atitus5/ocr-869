@@ -1,20 +1,20 @@
 from nltk import word_tokenize
 import numpy as np
 
-def char_err_rate(bp_predictions, truth_one_hot:
-    truth_labels = np.argmax(truth_one_hot, axis=1)
+def char_err_rate(bp_predictions, kjv):
+    truth_labels = np.argmax(kjv.one_hot(), axis=1)
     correct_chars = np.sum(bp_predictions == truth_labels)
-    total_chars = len(kjv_text.full_text)
+    total_chars = len(truth_labels)
     
     return (1.0 - (correct_chars / float(total_chars)))
 
-def word_err_rate(bp_predictions, truth_one_hot):
+def word_err_rate(bp_predictions, kjv):
     # Convert belief prop predictions to sentence
-    bp_sentence = "".join([kjv_text.int_to_char[int(x)] for x in bp_predictions])
+    bp_sentence = "".join([kjv.int_to_char[int(x)] for x in bp_predictions])
     correct_tokens = 0
 
     # Compute WER as percentage of correct tokens as aligned by ground truth word tokens
-    truth_tokens = word_tokenize(kjv_text.full_text)
+    truth_tokens = word_tokenize(kjv.full_text)
     total_tokens = len(truth_tokens)
 
     token_idx = 0
@@ -29,7 +29,7 @@ def word_err_rate(bp_predictions, truth_one_hot):
         char_idx += len(truth_token)
         if token_idx < total_tokens - 1:
             next_truth_token = truth_tokens[token_idx + 1] 
-            while kjv_text.full_text[char_idx] != next_truth_token[0]:
+            while kjv.full_text[char_idx] != next_truth_token[0]:
                 char_idx += 1
         token_idx += 1
     
