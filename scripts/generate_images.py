@@ -19,7 +19,7 @@ def makeImage(txt, font, filename, sz):
 
 font_size_in = 0.25
 font_size_pt = int(font_size_in * 72.0)
-font_path = "/Library/Fonts/Andale Mono.ttf"    # Specific to Mac OS -- change if needed
+font_path = "utils/Andale-Mono.ttf"    # Specific to Mac OS -- change if needed
 font = ImageFont.truetype(font_path, font_size_pt)
 char_height, char_width = font.getsize("A")[0:2]
 
@@ -29,8 +29,8 @@ image_dims_px = (char_height * chars_per_line, (font_size_pt + 3) * lines_per_im
 
 print("Image dimensions: (%d px x %d px)" % (image_dims_px[0], image_dims_px[1]))
 
-text_str_per_image = kjv.image_text((chars_per_line, lines_per_img))
-
+text_str_per_image = kjv.image_text(chars_per_line, lines_per_img)
+num_imgs = len(text_str_per_image)
 print("Creating %d images..." % num_imgs)
 for i in range(num_imgs):
     # Print update in place
