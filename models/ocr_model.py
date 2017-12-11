@@ -31,10 +31,52 @@ class OCRModel(object):
         self.image_paths = [os.path.join(image_dir, filename) for filename in filter(lambda x: x.endswith(".png"), os.listdir(image_dir))]
 
         # Dynamically load these later
+        self._all_data = None
         self._training_data = None
         self._val_data = None
 
         self.debug = debug
+
+    def all_data(self):
+        if self._all_data is None:
+            print("Preparing all data...")
+
+            # Samples are flattened individual character images
+            flattened_size = self.char_image_size[0] * self.char_image_size[1]
+            chars_per_image = self.chars_per_line * self.lines_per_img
+
+            if self.debug:
+                # Quick prototyping
+                all_indices = list(range(10))
+            else:
+                all_indices = range(len(self.kjv.dataset_indices("train", self.chars_per_line, self.lines_per_img)) + len(self.kjv.dataset_indices("val", self.chars_per_line, self.lines_per_img)))
+
+            all_feats = np.empty((len(all_indices) * chars_per_image,
+                                       flattened_size), dtype=float)
+            all_labels = np.zeros((len(all_indices) * chars_per_image), dtype=int)
+
+
+            for i in range(len(all_indices)):
+                all_idx = all_indices[i]
+                img = io.imread(self.image_paths[all_idx], as_grey=True)
+                for x in range(self.chars_per_line):
+                    for y in range(self.lines_per_img):
+                        feats = img[y * (self.char_width + 3):(y + 1) * (self.char_width + 3),
+                                    x * self.char_height:(x + 1) * self.char_height]
+                        #io.imshow(feats)
+        
+                        feats_flattened = feats.reshape((-1))
+                        
+                        feat_idx = (i * chars_per_image) + (x * self.lines_per_img) + y 
+                        all_feats[feat_idx, :] = feats_flattened
+                        all_labels[feat_idx] = self.labels[all_idx, (y * self.lines_per_img) + x]
+                        #print(all_labels[feat_idx])
+                        #matplotlib.pyplot.show()
+            self._all_data = (all_feats, all_labels)
+            
+            print("Prepared all data.")
+
+        return self._all_data
 
     def training_data(self):
         if self._training_data is None:

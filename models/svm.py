@@ -22,7 +22,7 @@ class OCRSVM(OCRModel):
         print("Fitted classifier.")
 
     def eval(self):
-        eval_feats, eval_labels = self.eval_data()
+        eval_feats, eval_labels = self.all_data()
 
         print("Evaluating data points with classifier...")
         predictions = self.classifier.predict_proba(eval_feats)

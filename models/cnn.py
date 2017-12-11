@@ -177,7 +177,7 @@ class OCRCNN(OCRModel):
         print("Trained convnet.")
 
     def eval(self):
-        eval_feats, eval_labels = self.eval_data() 
+        eval_feats, eval_labels = self.all_data() 
         eval_feats = torch.FloatTensor(eval_feats)
         eval_labels = torch.LongTensor(list(map(int, eval_labels)))
 
