@@ -61,7 +61,7 @@ class OCRCNN(OCRModel):
 
     def forward_classifier(self, feats):
         output = feats
-        output = output.view((-1, self.char_image_size[0]*self.char_image_size[1]))
+        output = output.view((-1, (self.char_width+3)* self.char_height))
         for i, (layer_name, layer) in enumerate(self.layers.items()):
             '''
             if layer_name == "lin_final":
@@ -82,8 +82,8 @@ class OCRCNN(OCRModel):
         print("Training convnet...")
         batch_size = 256
         max_epochs = 25
-        learning_rate = 0.0001
-        optimizer = optim.Adam(self.classifier.parameters(), lr=learning_rate)
+        learning_rate = 0.01
+        optimizer = optim.SGD(self.classifier.parameters(), lr=learning_rate)
 
         # Regularize via patience-based early stopping
         best_val_loss = float('inf')
@@ -145,7 +145,7 @@ class OCRCNN(OCRModel):
             for batch_idx in range(int(math.ceil(val_feats.shape[0] / float(batch_size)))):
                 feats = Variable(val_feats[batch_idx * batch_size:(batch_idx + 1) * batch_size, :],
                                  volatile=True)     # Set to volatile so history isn't saved
-                feats = feats.view(batch_size, 1, self.char_image_size[0], self.char_image_size[1])
+                feats = feats.view(batch_size, 1, self.char_width+3, self.char_height)
                 labels = Variable(val_labels[batch_idx * batch_size:(batch_idx + 1) * batch_size],
                                   volatile=True)    # Set to volatile so history isn't saved
                 if self.on_gpu:
@@ -198,7 +198,7 @@ class OCRCNN(OCRModel):
         print("Trained convnet.")
 
     def eval(self):
-        eval_feats, eval_labels = self.eval_data() 
+        eval_feats, eval_labels = self.all_data() 
         eval_feats = torch.FloatTensor(eval_feats)
         eval_labels = torch.LongTensor(list(map(int, eval_labels)))
 
@@ -214,12 +214,13 @@ class OCRCNN(OCRModel):
         print_interval = max(1, int(num_batches / 100.0))
         for batch_idx in range(num_batches):
             feats = eval_feats[batch_idx * batch_size:(batch_idx + 1) * batch_size, :]
-            feats = feats.view(batch_size, 1, self.char_image_size[0], self.char_image_size[1])
+            feats = feats.view(batch_size, 1,self.char_width+3, self.char_height)
             feats = Variable(feats, volatile=True)      # Set to volatile so history isn't saved
             if self.on_gpu:
                     feats = feats.cuda()
 
             batch_probs = self.forward_classifier(feats)
+            #print(batch_probs.cpu().data.numpy())
             batch_preds = np.argmax(batch_probs.cpu().data.numpy(), axis=1).reshape((-1))
             predictions[batch_idx * batch_size:(batch_idx + 1) * batch_size] = batch_preds
 

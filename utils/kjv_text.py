@@ -130,7 +130,7 @@ class KJVTextDataset(object):
     def val_indices(self, chars_per_line, lines_per_img):
         full_range = list(range(len(self.image_text(chars_per_line, lines_per_img))))
         # return full_range[9:10:] 
-        return full_range[9:10:200] 
+        return full_range[190:200] 
 
     def image_text(self, chars_per_line, lines_per_img):
         num_lines = int(math.ceil(len(self.full_text) / float(chars_per_line)))

@@ -8,6 +8,10 @@ from sklearn import svm
 
 from models.ocr_model import OCRModel
 
+from skimage import io
+
+import matplotlib
+
 class OCRSVM(OCRModel):
     def __init__(self, image_dir="images/", debug=False, kernel="rbf", degree=3):
         super(OCRSVM, self).__init__(image_dir=image_dir, debug=debug)
@@ -16,7 +20,14 @@ class OCRSVM(OCRModel):
 
     def train(self):
         training_feats, training_labels = self.training_data()
-
+        
+        for i, (fe, lab) in enumerate(zip(training_feats, training_labels)):
+            if i%(32*32) < 3:
+                fe = np.reshape(fe, ((self.char_width + 3), self.char_height))
+                io.imshow(fe)
+                print(lab)
+                matplotlib.pyplot.show()
+        
         print("Fitting classifier...")
         self.classifier.fit(training_feats, training_labels)
         print("Fitted classifier.")

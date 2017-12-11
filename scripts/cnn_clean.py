@@ -4,7 +4,7 @@ sys.path.append("./")
 
 import numpy as np
 
-from models.cnn import OCRCNN
+from models.dnn import OCRCNN
 
 from utils.belief_prop import bp_error_correction
 from utils.viterbi import viterbi_error_correction
@@ -15,7 +15,7 @@ kjv = KJVTextDataset()
 
 # Predict characters with convolutional neural net
 kernel_sizes = [5, 3]
-unit_counts = [128, 64]
+unit_counts = [220, 220]
 strides = [1, 1]
 maxpool_sizes = [0, 0]
 print("Using kernels %s" % str(kernel_sizes))
@@ -31,6 +31,7 @@ print("Done training CNN.")
 
 print("Predicting character labels using CNN...")
 predictions = model.eval()
+print(predictions)
 print("Done predicting character labels using CNN.")
 
 # Compute character error rate and word error rate before error correction

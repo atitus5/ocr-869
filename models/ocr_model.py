@@ -69,7 +69,7 @@ class OCRModel(object):
                         
                         feat_idx = (i * chars_per_image) + (x * self.lines_per_img) + y 
                         all_feats[feat_idx, :] = feats_flattened
-                        all_labels[feat_idx] = self.labels[all_idx, (y * self.lines_per_img) + x]
+                        all_labels[feat_idx] = self.labels[all_idx, (x * self.lines_per_img) + y]
                         #print(all_labels[feat_idx])
                         #matplotlib.pyplot.show()
             self._all_data = (all_feats, all_labels)
@@ -148,7 +148,7 @@ class OCRModel(object):
                         
                         feat_idx = (i * chars_per_image) + (x * self.lines_per_img) + y 
                         val_feats[feat_idx, :] = feats_flattened
-                        val_labels[feat_idx] = self.labels[val_idx, (x * self.lines_per_img) + y]
+                        val_labels[feat_idx] = self.labels[val_idx, (y * self.lines_per_img) + x]
 
             self._val_data = (val_feats, val_labels)
             
