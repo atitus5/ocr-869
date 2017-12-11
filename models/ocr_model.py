@@ -27,8 +27,9 @@ class OCRModel(object):
                               (self.font_size_pt + 3) * self.lines_per_img)
         self.char_image_size = (self.char_height, (self.char_width + 3))
 
+        # Sort NUMERICALLY, not LEXICOGRAPHICALLY... goodness
         self.labels = self.kjv.image_label_mat(self.chars_per_line, self.lines_per_img)
-        self.image_paths = [os.path.join(image_dir, filename) for filename in filter(lambda x: x.endswith(".png"), os.listdir(image_dir))]
+        self.image_paths = [os.path.join(image_dir, filename) for filename in sorted(filter(lambda x: x.endswith(".png"), os.listdir(image_dir)), key=lambda filename:int(filename.rstrip(".png")))]
 
         # Dynamically load these later
         self._all_data = None
