@@ -9,7 +9,12 @@ from models.dnn import OCRCNN
 from utils.belief_prop import bp_error_correction
 from utils.viterbi import viterbi_error_correction
 from utils.kjv_text import KJVTextDataset
-from utils.metrics import char_err_rate, word_err_rate
+from utils.metrics import char_err_rate, word_err_rate, confusion_matrix
+
+
+import matplotlib.pyplot as plt
+import seaborn as sns; sns.set()
+
 
 kjv = KJVTextDataset()
 
@@ -31,6 +36,11 @@ print("Done training CNN.")
 
 print("Predicting character labels using CNN...")
 preds = model.eval()
+
+#low_values_flags = preds < .5  # Where values are low
+#preds[low_values_flags] = 0  # All low values set to 0
+
+print(preds.shape)
 predictions = np.zeros(preds.shape)
 for i in range(len(preds)):
     extra = i%(32*32)
@@ -41,12 +51,28 @@ for i in range(len(preds)):
     predictions[base] = preds[i]
 
 
+
+
 print("Done predicting character labels using CNN.")
 
 # Compute character error rate and word error rate before error correction
 print("PRE-ERROR CORRECTION")
 print("Computing character error rate (CER)...")
 cer = char_err_rate(predictions, kjv)
+
+
+CM = confusion_matrix(predictions, kjv)
+print(CM)
+ax = sns.heatmap(CM,
+                 cmap="jet",
+                 xticklabels=sorted(kjv.char_to_int.keys()),
+                 yticklabels=sorted(kjv.char_to_int.keys()))
+ax.set_title("Confusion Matrix")
+plt.xlabel("Character 2")
+plt.ylabel("Character 1")
+plt.show()
+
+
 print("Character error rate (CER): %.3f%%" % (cer * 100.0))
 
 print("Computing word error rate (WER)...")

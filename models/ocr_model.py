@@ -60,6 +60,7 @@ class OCRModel(object):
             for i in range(len(all_indices)):
                 all_idx = all_indices[i]
                 img = io.imread(self.image_paths[all_idx], as_grey=True)
+                img+= np.random.normal(0, .15, img.shape)
                 for x in range(self.chars_per_line):
                     for y in range(self.lines_per_img):
                         feats = img[y * (self.char_width + 3):(y + 1) * (self.char_width + 3),

@@ -3,6 +3,8 @@ import numpy as np
 
 def char_err_rate(bp_predictions, kjv):
     truth_labels = np.argmax(kjv.one_hot(), axis=1)[:len(bp_predictions)]
+    if len(bp_predictions.shape) > 1:
+        bp_predictions = np.argmax(bp_predictions, axis=1)
     correct_chars = np.sum(np.equal(bp_predictions , truth_labels))
     total_chars = len(truth_labels)
 
@@ -10,7 +12,18 @@ def char_err_rate(bp_predictions, kjv):
     
     return (1.0 - (correct_chars / float(total_chars)))
 
+def confusion_matrix(bp_predictions, kjv):
+    if len(bp_predictions.shape) > 1:
+        bp_predictions = np.argmax(bp_predictions, axis=1)
+    truth_labels = np.argmax(kjv.one_hot(), axis=1)[:len(bp_predictions)]
+    matrix = np.zeros((kjv.unique_chars(), kjv.unique_chars()))
+    for i in range(len(truth_labels)):
+        matrix[truth_labels[i]][int(bp_predictions[i])]+=1
+    return matrix/matrix.sum(axis=1, keepdims=True) 
+
 def word_err_rate(bp_predictions, kjv):
+    if len(bp_predictions.shape) > 1:
+        bp_predictions = np.argmax(bp_predictions, axis=1)
     # Convert belief prop predictions to sentence
     bp_sentence = "".join([kjv.int_to_char[int(x)] for x in bp_predictions])
     correct_tokens = 0

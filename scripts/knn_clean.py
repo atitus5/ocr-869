@@ -15,7 +15,7 @@ kjv = KJVTextDataset()
 
 # Predict characters with a k-Nearest Neighbors model
 # model = OCRKNN()
-model = OCRKNN(debug=True)
+model = OCRKNN(debug=False)
 
 print("Training KNN...")
 model.train()

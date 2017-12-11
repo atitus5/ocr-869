@@ -205,7 +205,7 @@ class OCRCNN(OCRModel):
         print("Evaluating data points with convnet...")
 
         # Use one-hot to save some memory
-        predictions = np.empty(len(eval_labels), dtype=int)
+        predictions = np.empty((len(eval_labels), self.kjv.unique_chars()), dtype=int)
 
         batch_size = 128
         self.classifier.eval()
@@ -221,8 +221,8 @@ class OCRCNN(OCRModel):
 
             batch_probs = self.forward_classifier(feats)
             #print(batch_probs.cpu().data.numpy())
-            batch_preds = np.argmax(batch_probs.cpu().data.numpy(), axis=1).reshape((-1))
-            predictions[batch_idx * batch_size:(batch_idx + 1) * batch_size] = batch_preds
+            #batch_preds = np.argmax(batch_probs.cpu().data.numpy(), axis=1).reshape((-1))
+            predictions[batch_idx * batch_size:(batch_idx + 1) * batch_size,:] = batch_probs.cpu().data.numpy()
 
             if batch_idx % print_interval == 0:
                 # Print update in place

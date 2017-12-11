@@ -15,13 +15,16 @@ def bp_error_correction(kjv, all_predictions):
         predicted_char_ints = np.argmax(all_predictions, axis=1)
     else:
         predicted_char_ints = all_predictions
-    predicted_chars = list(map(lambda x: kjv.int_to_char[x], predicted_char_ints))
+        all_predictions = np.zeros((len(all_predictions), kjv.unique_chars()), dtype=float)
+        for i in range(len(all_predictions)):
+            all_predictions[i, int(predicted_char_ints[i])] = 1.0
+    predicted_chars = list(map(lambda x: kjv.int_to_char[int(x)], predicted_char_ints))
     predicted_sentence = "".join(predicted_chars)
     predicted_tokens = word_tokenize(predicted_sentence)
     print("Done setting up.")
     
     # Add in backoff to keep probabilities relatively localized (think exponential moving avg)
-    char_dist_1pct = 5  # Arbitrary; can be changed
+    char_dist_1pct = 3  # Arbitrary; can be changed
     backoff_alpha = math.pow(0.01, (1.0 / float(char_dist_1pct)))
     print("Using backoff alpha %.6f (1%% contrib at %d char distance)" % (backoff_alpha, char_dist_1pct))
 
