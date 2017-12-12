@@ -19,10 +19,10 @@ import seaborn as sns; sns.set()
 kjv = KJVTextDataset()
 
 # Predict characters with convolutional neural net
-kernel_sizes = [5, 3]
-unit_counts = [220, 220]
-strides = [1, 1]
-maxpool_sizes = [0, 0]
+kernel_sizes = []
+unit_counts = []
+strides = []
+maxpool_sizes = []
 print("Using kernels %s" % str(kernel_sizes))
 print("Using unit counts %s" % str(unit_counts))
 print("Using strides %s" % str(strides))
