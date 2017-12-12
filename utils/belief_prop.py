@@ -24,7 +24,7 @@ def bp_error_correction(kjv, all_predictions):
     print("Done setting up.")
     
     # Add in backoff to keep probabilities relatively localized (think exponential moving avg)
-    char_dist_1pct = 3  # Arbitrary; can be changed
+    char_dist_1pct = 5  # Arbitrary; can be changed
     backoff_alpha = math.pow(0.01, (1.0 / float(char_dist_1pct)))
     print("Using backoff alpha %.6f (1%% contrib at %d char distance)" % (backoff_alpha, char_dist_1pct))
 

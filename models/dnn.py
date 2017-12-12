@@ -20,7 +20,7 @@ import matplotlib
 class OCRCNN(OCRModel):
     def __init__(self, image_dir="images/", debug=False, kernel_sizes=[], unit_counts=[], strides=[], maxpool_sizes=[]):
         super(OCRCNN, self).__init__(image_dir=image_dir, debug=debug)
-        self.on_gpu = torch.cuda.is_available()
+        self.on_gpu = False#torch.cuda.is_available()
 
         assert(len(kernel_sizes) == len(unit_counts) == len(strides) == len(maxpool_sizes))
         
@@ -81,7 +81,7 @@ class OCRCNN(OCRModel):
 
         print("Training convnet...")
         batch_size = 256
-        max_epochs = 5
+        max_epochs = 100
         learning_rate = 0.01
         optimizer = optim.SGD(self.classifier.parameters(), lr=learning_rate)
 
@@ -124,10 +124,10 @@ class OCRCNN(OCRModel):
                 train_loss += loss.data[0]
                 optimizer.step()
 
-                if batch_idx % print_interval == 0:
-                    # Print update in place
-                    sys.stdout.write("\rTrain %d%% complete" % int(batch_idx / float(training_feats.shape[0] / float(batch_size) / 100.0)))
-                    sys.stdout.flush()
+                #if batch_idx % print_interval == 0:
+                #    # Print update in place
+                #    sys.stdout.write("\rTrain %d%% complete" % int(batch_idx / float(training_feats.shape[0] / float(batch_size) / 100.0)))
+                #    sys.stdout.flush()
 
             # Write new line to clear line
             sys.stdout.write("\rTrain 100% complete!\n")
@@ -156,10 +156,10 @@ class OCRCNN(OCRModel):
                 loss = nn.CrossEntropyLoss()(predictions, labels)
                 val_loss += loss.data[0]
 
-                if batch_idx % print_interval == 0:
-                    # Print update in place
-                    sys.stdout.write("\rVal %d%% complete" % int(batch_idx / float(val_feats.shape[0] / float(batch_size) / 100.0)))
-                    sys.stdout.flush()
+                #if batch_idx % print_interval == 0:
+                #    # Print update in place
+                #    sys.stdout.write("\rVal %d%% complete" % int(batch_idx / float(val_feats.shape[0] / float(batch_size) / 100.0)))
+                #    sys.stdout.flush()
 
             # Write new line to clear line
             sys.stdout.write("\rVal 100% complete!\n")
