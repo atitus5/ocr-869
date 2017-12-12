@@ -51,7 +51,7 @@ Massachusetts Institute of Technology\\
 
 %%%%%%%%% ABSTRACT
 \begin{abstract}
-TODO
+Optical character recognition is the problem of recovering the text from an image.  This can be used in many contexts, including reading traffic signs for self-driving cars and digitizing historical documents.  In both of these cases, single character errors can lead to word errors and change the meaning of the text trying to be understood. It is also likely for these errors to arise regardless of the power of the system, due to uncontrollable external factors, such as views being obscured or degradation of the text itself. For this reason, we need a way to correct errors beyond the level of individual characters. We conclude that the usage of language models to perform higher-level error correction can be successful with simple optical character recognizers under certain noise conditions.
 \end{abstract}
 
 %%%%%%%%% BODY TEXT
@@ -265,9 +265,8 @@ for the error correction methods (see Figure
 Markov chain with $V = \text{length of dataset in characters}$ hidden
 states. The edge weights from vertex $i$ to $j$ are simply the
 character-level bigram probabilities $P(j | i)$, whereas the emission
-probabilities $\Phi(i)$ are simply the normalized probabilities output
-by the OCR model. In this model, we let the emission symbols equal the
-hidden states, so emission probabilities are ignored.
+probabilities for vertex $i$ are simply the normalized probabilities 
+$\Phi_i(:)$ output by the OCR model.
 
 \begin{figure}
 \includegraphics[scale=.8]{Capture.PNG}
@@ -284,20 +283,20 @@ probability calculations of neighboring states that can be reused,
 rather than recomputed. Formally, the marginal probability
 of state $i$ being character $j$ is the product of incoming messages
 $m_{i-1, i}$ and $m_{i + 1, i}$ from its neighbors $(i - 1)$ and
-$(i + 1)$, respectively, or:
+$(i + 1)$ with its own emission probability $\Phi_i(x_j)$, respectively, or:
 \begin{equation}
 \begin{split}
 P_i(x_j) &= \Phi_i(x_j) * m_{i - 1, i}(x_j) * m_{i + 1, i}(x_j) \\
-&= \Phi_i(x_j) \left(\sum_{x_k} P(x_i | x_k) m_{i - 2, i - 1}(x_k) \right) *\\
-&\hspace{15mm} \left(\sum_{x_k} P(x_k | x_i) m_{i + 1, i + 2}(x_k) \right) \\ 
+&= \Phi_i(x_j) * \left(\sum_{x_k} P(x_i | x_k) * m_{i - 2, i - 1}(x_k) \right) *\\
+&\hspace{18mm} \left(\sum_{x_k} P(x_k | x_i) * m_{i + 1, i + 2}(x_k) \right) \\ 
 \end{split}
 \end{equation}
 
 These messages are computed with a synchronous parallel update schedule,
-where messages $m_{2, 3}(x_j), \cdots m_{N - 1, N}(x_j)$ are computed in
+where messages $m_{2, 3}(x_j), \cdots, m_{N - 1, N}(x_j)$ are computed in
 the increasing direction with boundary condition
 $m_{1, 2}(x_j) = \Phi_1(x_j) \sum_{x_k} P(x_k | x_j)$ at the same time that
-messages $m_{N - 1, N - 2}(x_j), \cdots m_{2, 1}(x_j)$ are computed in
+messages $m_{N - 1, N - 2}(x_j), \cdots, m_{2, 1}(x_j)$ are computed in
 the decreasing direction with boundary condition
 $m_{N, N - 1}(x_j) = \Phi_N(x_j) \sum_{x_k} P(x_j | x_k)$.
 
@@ -310,21 +309,74 @@ can be on the order of millions of characters. Therefore, belief
 propagation turns this intractable probability calculation into
 something manageable on most computers.
 
+\subsubsection{Backoff Alpha}
+
+One thing that we noticed while running belief propagation on our OCR
+results is that we had no control for how much messages for a given
+state could affect messages for states that are many characters away.
+Thus, we added a backoff component, $\alpha < 1.0$, to control roughly
+at how many characters away $s$ the contribution of a given message would
+become negligible (here, $<0.01$ times its original value). This modified
+our formulas to the following, with only neglible increases in resulting
+accuracy:
+
+\begin{equation}
+\alpha = 0.01^{1 / s}
+\end{equation}
+
+\begin{equation}
+\begin{split}
+P_i(x_j) &= \Phi_i(x_j) * m_{i - 1, i}(x_j) * m_{i + 1, i}(x_j) \\
+&= \Phi_i(x_j) * \left(\sum_{x_k} P(x_i | x_k) * \alpha * m_{i - 2, i - 1}(x_k) \right) *\\
+&\hspace{18mm} \left(\sum_{x_k} P(x_k | x_i) * \alpha * m_{i + 1, i + 2}(x_k) \right) \\ 
+\end{split}
+\end{equation}
+
 \subsection{Viterbi Algorithm}
 
-TODO
+The Viterbi Algorithm, proposed in 1967 by Andrew Viterbi \cite{Forney73-TVA},
+is a dynamic programming algorithm that finds the most likely
+sequence of states in a 1\textsuperscript{st}-order hidden Markov model
+with $N$ hidden states and $d$ possible values for each state.
+The algorithm computes this sequence by maintaining two tables of
+size $(d \times N)$: $T_1$, which stores the probability of the most likely
+path seen so far; and $T_2$, which stores a ``back pointer'' to the previous
+state in the most likely sequence so far. For our OCR Markov chain model,
+we initialize $T_1[:,1] = \Phi_1(:)$ and $T_2[:,1] = 0$ (i.e., no back
+pointer) and then perform updates for each node $i = 2, \cdots, N$
+in order by iterating over each possible state $j = 1, \cdots, d$ and
+updating tables as follows:
+\begin{equation}
+\begin{split}
+T_1[j, i] &= \Phi_i(j) * \max_k \left( T_1[k, i - 1] * P(j | k) \right) \\
+T_2[j, i] &= \arg \max_k \left( T_1[k, i - 1] * P(j | k) \right) \\
+\end{split}
+\end{equation}
+
+Once complete, we can reassemble the most likely sequence by starting
+at the most likely state for node $N$ and following the back pointers
+in $T_2$ until we reach node 1, then reversing the sequence. The time
+complexity of this algorithm is therefore also $O(Nd^2)$, so we have
+a similar runtime to belief propagation.
 
 
 
 \section{Experimental Results}
 \label{exp_results}
-We first notice that in this constrained environment of only using the same mono-space font and not varying the text size that our simply linear model is able to get very high accuracy.  Furthermore as can be seen in Figure \ref{fig:CER} the model is able to determine the correct character under levels of noise that would make it difficult for humans.  In fact even when $\sigma = .1$ which as can be seen in Figure \ref{fig:e_images} is unintelligible, the model is able to correctly determine the letter about 65\% of the time. 
+We first noticed that in this constrained environment of only using the
+same monospace font and not varying the text size that our simple,
+1-layer linear model is able to get near-perfect character-level accuracy.
+Furthermore, as one can see in Figure \ref{fig:CER}, the model is able to
+determine the correct character under levels of noise that would make it
+difficult even for humans. Even when $\sigma = 1.0$ and the image appears
+to be almost completely unintelligible, the model is able to correctly
+determine the character about 65\% of the time. 
 
 \begin{figure}
 \begin{tikzpicture}
 \begin{axis}[
-    xlabel={additive error standard deviation},
-    ylabel={Character error rate (\%)},
+    xlabel={Additive Gaussian error $\sigma$},
+    ylabel={Character Error Rate (CER; \%)},
     legend pos=north west
 ]
 \addplot[
@@ -336,25 +388,56 @@ We first notice that in this constrained environment of only using the same mono
     };
 \end{axis}
 \end{tikzpicture}
-\caption{\label{fig:CER}How the CER changes with added noise to every image}
+\caption{\label{fig:CER} CER in the face of additive Gaussian noise}
 \end{figure}
 
-For each of our runs we calculate a confusion matrix.  This is a matrix $M$ where $M[i][j]$ is the percent of the time that when $i$ was the true value that the model predicted $j$.  Figure \ref{fig:confusion} shows a confusion matrix with relatively high amount of noise, we can still almost always determine most of the characters, and the ones that are hard to determine are characters which appear very few times so they are not learned very well and unlikely to be guessed randomly, which might happen under high noise. 
+For each model that we trained, we calculate a confusion matrix. 
+This is a matrix $M$ where $M[i][j]$ is the percentage of instances
+in the data where $i$ was the true value and the model predicted $j$.
+Figure \ref{fig:confusion} shows a confusion matrix for a model evaluated
+on data with a relatively high amount of Gaussian noise ($\sigma = 0.6$)
+added. We can still almost always determine the majority of the characters,
+and the ones that are hard to determine are characters which appear very
+few times (or not at all). Such characters are not learned very well due to
+their lack of training examples and are unlikely to be guessed randomly,
+even in the presence of high noise, as a result.
 
 \begin{figure}
-\includegraphics[scale=.5]{confusion.png}
-\caption{\label{fig:confusion}This is a confusion matrix when we add noise to half of the images with standard deviation = .6}
+\includegraphics[scale=.6]{confusion.png}
+\caption{\label{fig:confusion} Confusion matrix for adding Gaussian noise ($\sigma = 0.6$) to half of the images}
 \end{figure}
 
 
-\subsection{error correction}
-Our results are fixing the noised images were discouraging.  We added noise to 20\%, 30\%,and 40\% of the images with standard deviations between .4 and .5 since this was the point were images start being difficult for humans to determine the true labeling.  This gave us CER around 3-7\% and WER between 10 and 20\%.  After trying to fix it with both models the CER went up and for belief propagation the WER also went up.  the Viterbi algorithm was able to decrease the WER, however, it would only do so by about .1\%.  Overall this method seems like it will work, but more complete language models would be needed to significantly improve the performance.
+\subsection{Error Correction}
+Our results for fixing character-level errors in the noised images
+were underwhelming.  We added noise to 20\%, 30\%,and 40\% of the
+images with standard deviations between $\sigma = 0.4$ and $\sigma = 0.5$
+since this (empirically) seemed to be the point at which it became difficult
+for humans to determine the true labeling. This gave us CER between 3
+and 7\%, and WER between 10 and 20\%.  After trying to fix it with both methods
+(belief propagation and Viterbi algorithm), the CER went up and for belief
+propagation, the WER also went up.  The Viterbi algorithm was able to
+decrease the WER; however, it would only do so by about 0.1\%.
+Overall, this method seems like it will work, but more complete
+language models would be needed to significantly improve the performance.
 
 
 
 \section{Conclusion and Future Work}
 \label{conclusion_future_work}
-While not as much as an improvement as we would have hoped we have shown that under certain conditions you can improve the accuracy of OCR by using language modeling.  This could be extended in many ways.  The first is using more elaborate language models.  Such as using n-grams and not just bigrams or using a word level model.  We could also test using a different base OCR model.  The goal is simplicity and performance in this case so it might be possible that you do not even need a full linear classifier and it can instead be even smaller.  Lastly we would hope to be able to use this on more different types of data, such as different fonts, size, and even hand written text.
+While we did not observe as much of an improvement in CER and WER
+as we would have hoped to see using these methods, we were indeed
+able to improve the accuracy of OCR under certain conditions by
+using language modeling. This could be further investigated in many
+ways. The first is to use more elaborate language models, such as
+larger character-level $n$-grams or using a word-level model.  We
+could also perform experiments using a different base OCR model than just
+a simple 1-layer linear classifier. It might even be possible to use a
+smaller and/or simpler model than a fully-connected linear classifier.
+Lastly, in a real-world setting, a user would hope to be able to use
+this on a larger diversity of data, so we would expand our training
+dataset to include different fonts, different text size and orientations,
+and even possibly handwritten text.
 
 
 
